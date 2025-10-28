@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="home">
+  <h1 class="page-title">Welcome, {{ session.get('username') }}</h1>
+  <div id="main-modal" class="modal show">
+    <div class="modal-content slide-up">
+      <h2>Choose an option</h2>
+      <div class="modal-actions">
+        <a class="btn primary" href="{{ url_for('reviews_menu') }}">Reviews</a>
+        <a class="btn primary" href="{{ url_for('batch_switch') }}">Batch Switch</a>
+        <a class="btn primary" href="{{ url_for('eduvids') }}">Eduvids</a>
+      </div>
+      <button class="btn link close-modal" data-target="main-modal">Close</button>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="home">
+  <button class="btn link back" onclick="goBack()">Back</button>
+  <h1 class="page-title">Reviews</h1>
+  <div id="reviews-modal" class="modal show">
+    <div class="modal-content slide-up">
+      <h2>Select Review Type</h2>
+      <div class="modal-actions">
+        <a class="btn primary" href="{{ url_for('faculty_review') }}">Faculty Review</a>
+        <a class="btn primary" href="{{ url_for('course_review') }}">Course Review</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

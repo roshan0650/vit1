@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.db-journal
+.DS_Store
+.git/
+.gitignore
+*.md
+inspect_db.py
+test_backend.py
+verify_installation.py

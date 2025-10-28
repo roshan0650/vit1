@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<section>
+  <button class="btn link back" onclick="goBack()">Back</button>
+  <h1 class="page-title">Eduvids</h1>
+  <form method="post" class="card form">
+    <label>Select Course
+      <select name="course" required>
+        <option value="">-- select --</option>
+        <option value="cse" {% if selected=='cse' %}selected{% endif %}>CSE</option>
+        <option value="csm" {% if selected=='csm' %}selected{% endif %}>CSM</option>
+        <option value="csd" {% if selected=='csd' %}selected{% endif %}>CSD</option>
+        <option value="csit" {% if selected=='csit' %}selected{% endif %}>CSIT</option>
+      </select>
+    </label>
+    <div class="actions">
+      <button type="submit" class="btn primary">Get Videos</button>
+    </div>
+  </form>
+
+  {% if videos %}
+  <div class="card list">
+    <h3>Recommended Videos</h3>
+    <ul>
+      {% for title, url in videos %}
+      <li><a href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ title }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

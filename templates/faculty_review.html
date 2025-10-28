@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<section>
+  <button class="btn link back" onclick="goBack()">Back</button>
+  <h1 class="page-title">Faculty Review</h1>
+  <form method="post" class="card form" onsubmit="return validateReviewLength('review_text', 1000)">
+    <label>Roll No
+      <input name="roll_no" type="text" required />
+    </label>
+    <label>Current Year Studying
+      <input name="current_year" type="text" required />
+    </label>
+    <label>Branch
+      <input name="branch" type="text" required />
+    </label>
+    <label>Faculty
+      <input name="faculty" type="text" required />
+    </label>
+    <label>Review (max 1000 words)
+      <textarea id="review_text" name="review_text" rows="7" required></textarea>
+    </label>
+    <div class="actions">
+      <a class="btn" href="{{ url_for('home') }}">Cancel</a>
+      <button type="submit" class="btn primary">Submit</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

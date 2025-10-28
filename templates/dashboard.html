@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<section>
+  <h1 class="page-title">Dashboard</h1>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Recent Faculty Reviews</h3>
+      <ul>
+        {% for r in faculty_items %}
+          <li>{{ r['faculty'] }} — {{ r['created_at'] }}</li>
+        {% else %}
+          <li>No items yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Recent Course Reviews</h3>
+      <ul>
+        {% for r in course_items %}
+          <li>{{ r['course'] }} — {{ r['created_at'] }}</li>
+        {% else %}
+          <li>No items yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Batch Switch Requests</h3>
+    <ul>
+      {% for r in batch_items %}
+        <li>{{ r['current_batch'] }} → {{ r['preferred_batch'] }} — {{ r['status'] }}</li>
+      {% else %}
+        <li>No items yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<section>
+  <button class="btn link back" onclick="goBack()">Back</button>
+  <h1 class="page-title">Batch Switch</h1>
+  <form method="post" class="card form">
+    <label>Current Batch
+      <input name="current_batch" type="text" required />
+    </label>
+    <label>Preferred Batch
+      <input name="preferred_batch" type="text" required />
+    </label>
+    <label>Current CGPA
+      <input name="current_cgpa" type="number" min="0" max="10" step="0.01" required />
+    </label>
+    <label>Preferred CGPA Range
+      <input name="preferred_cgpa_range" type="text" placeholder="e.g., 8.0 - 9.5" required />
+    </label>
+    <div class="actions">
+      <a class="btn" href="{{ url_for('home') }}">Cancel</a>
+      <button type="submit" class="btn primary">Submit</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="center">
+  <h1 class="page-title">{{ message or 'successfully submitted' }}</h1>
+  <div class="actions">
+    <a class="btn primary" href="{{ url_for('home') }}">Go Home</a>
+    <button class="btn" onclick="goBack()">Back</button>
+  </div>
+</section>
+{% endblock %}
