@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
@@ -22,7 +22,8 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL
+            password_hash TEXT NOT NULL,
+            is_admin INTEGER DEFAULT 0
         );
     """)
     cur.execute("""
@@ -67,8 +68,15 @@ def init_db():
     cur.execute("SELECT COUNT(*) as c FROM users")
     if cur.fetchone()[0] == 0:
         cur.execute(
-            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-            ("student", generate_password_hash("password"))
+            "INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)",
+            ("student", generate_password_hash("password"), 0)
+        )
+    # Seed admin user
+    cur.execute("SELECT COUNT(*) as c FROM users WHERE is_admin=1")
+    if cur.fetchone()[0] == 0:
+        cur.execute(
+            "INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)",
+            ("admin", generate_password_hash("admin123"), 1)
         )
     conn.commit()
     conn.close()
@@ -90,6 +98,21 @@ def login_required(view_func):
     return wrapped
 
 
+def admin_required(view_func):
+    from functools import wraps
+
+    @wraps(view_func)
+    def wrapped(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        if not session.get('is_admin'):
+            flash('Access denied. Admin privileges required.', 'error')
+            return redirect(url_for('home'))
+        return view_func(*args, **kwargs)
+
+    return wrapped
+
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -103,6 +126,7 @@ def login():
         if row and check_password_hash(row['password_hash'], password):
             session['user_id'] = row['id']
             session['username'] = row['username']
+            session['is_admin'] = bool(row['is_admin'])
             return redirect(url_for('home'))
         flash('Invalid credentials', 'error')
     return render_template('login.html')
@@ -261,6 +285,138 @@ def get_videos_for_course(course):
         ]
     }
     return mapping.get((course or '').lower(), [])
+
+
+@app.route('/admin')
+@admin_required
+def admin_panel():
+    return render_template('admin_panel.html')
+
+
+@app.route('/admin/faculty-reviews')
+@admin_required
+def admin_faculty_reviews():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT fr.*, u.username 
+        FROM faculty_reviews fr 
+        LEFT JOIN users u ON fr.user_id = u.id 
+        ORDER BY fr.created_at DESC
+    """)
+    reviews = cur.fetchall()
+    conn.close()
+    return render_template('admin_faculty_reviews.html', reviews=reviews)
+
+
+@app.route('/admin/course-reviews')
+@admin_required
+def admin_course_reviews():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT cr.*, u.username 
+        FROM course_reviews cr 
+        LEFT JOIN users u ON cr.user_id = u.id 
+        ORDER BY cr.created_at DESC
+    """)
+    reviews = cur.fetchall()
+    conn.close()
+    return render_template('admin_course_reviews.html', reviews=reviews)
+
+
+@app.route('/admin/batch-requests')
+@admin_required
+def admin_batch_requests():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT br.*, u.username 
+        FROM batch_requests br 
+        LEFT JOIN users u ON br.user_id = u.id 
+        ORDER BY br.created_at DESC
+    """)
+    requests = cur.fetchall()
+    conn.close()
+    return render_template('admin_batch_requests.html', requests=requests)
+
+
+@app.route('/admin/batch-request/<int:request_id>/update', methods=['POST'])
+@admin_required
+def update_batch_request(request_id):
+    status = request.form.get('status')
+    if status not in ['Approved', 'Rejected', 'Review Pending']:
+        flash('Invalid status', 'error')
+        return redirect(url_for('admin_batch_requests'))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE batch_requests SET status=? WHERE id=?",
+        (status, request_id)
+    )
+    conn.commit()
+    conn.close()
+    flash(f'Request {status.lower()} successfully', 'success')
+    return redirect(url_for('admin_batch_requests'))
+
+
+@app.route('/admin/delete/faculty-review/<int:review_id>', methods=['POST'])
+@admin_required
+def delete_faculty_review(review_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM faculty_reviews WHERE id=?", (review_id,))
+    conn.commit()
+    conn.close()
+    flash('Faculty review deleted successfully', 'success')
+    return redirect(url_for('admin_faculty_reviews'))
+
+
+@app.route('/admin/delete/course-review/<int:review_id>', methods=['POST'])
+@admin_required
+def delete_course_review(review_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM course_reviews WHERE id=?", (review_id,))
+    conn.commit()
+    conn.close()
+    flash('Course review deleted successfully', 'success')
+    return redirect(url_for('admin_course_reviews'))
+
+
+@app.route('/admin/stats')
+@admin_required
+def admin_stats():
+    conn = get_db()
+    cur = conn.cursor()
+    
+    cur.execute("SELECT COUNT(*) FROM users WHERE is_admin=0")
+    total_users = cur.fetchone()[0]
+    
+    cur.execute("SELECT COUNT(*) FROM faculty_reviews")
+    total_faculty_reviews = cur.fetchone()[0]
+    
+    cur.execute("SELECT COUNT(*) FROM course_reviews")
+    total_course_reviews = cur.fetchone()[0]
+    
+    cur.execute("SELECT COUNT(*) FROM batch_requests")
+    total_batch_requests = cur.fetchone()[0]
+    
+    cur.execute("SELECT COUNT(*) FROM batch_requests WHERE status='Review Pending'")
+    pending_requests = cur.fetchone()[0]
+    
+    conn.close()
+    
+    stats = {
+        'total_users': total_users,
+        'total_faculty_reviews': total_faculty_reviews,
+        'total_course_reviews': total_course_reviews,
+        'total_batch_requests': total_batch_requests,
+        'pending_requests': pending_requests
+    }
+    
+    return render_template('admin_stats.html', stats=stats)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block content %}
+<section>
+  <h1 class="page-title">Batch Switch Requests Management</h1>
+  <a href="{{ url_for('admin_panel') }}" class="btn-back">← Back to Admin Panel</a>
+  
+  <div class="card" style="margin-top: 2rem;">
+    <h3>All Batch Switch Requests ({{ requests|length }})</h3>
+    
+    {% if requests %}
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Current Batch</th>
+          <th>Preferred Batch</th>
+          <th>Current CGPA</th>
+          <th>Preferred CGPA Range</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in requests %}
+        <tr>
+          <td>{{ req['id'] }}</td>
+          <td>{{ req['username'] or 'N/A' }}</td>
+          <td>{{ req['current_batch'] }}</td>
+          <td><strong>{{ req['preferred_batch'] }}</strong></td>
+          <td>{{ req['current_cgpa'] }}</td>
+          <td>{{ req['preferred_cgpa_range'] }}</td>
+          <td>
+            <span class="status-badge status-{{ req['status'].lower().replace(' ', '-') }}">
+              {{ req['status'] }}
+            </span>
+          </td>
+          <td>{{ req['created_at'][:10] }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('update_batch_request', request_id=req['id']) }}" style="display: inline-block;">
+              <select name="status" class="status-select">
+                <option value="Review Pending" {% if req['status'] == 'Review Pending' %}selected{% endif %}>Review Pending</option>
+                <option value="Approved" {% if req['status'] == 'Approved' %}selected{% endif %}>Approved</option>
+                <option value="Rejected" {% if req['status'] == 'Rejected' %}selected{% endif %}>Rejected</option>
+              </select>
+              <button type="submit" class="btn-update">Update</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; color: #888; padding: 2rem;">No batch switch requests yet.</p>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .btn-back {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #f0f0f0;
+    text-decoration: none;
+    color: #333;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+  .btn-back:hover {
+    background-color: #e0e0e0;
+  }
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  .admin-table th,
+  .admin-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  .admin-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+  }
+  .admin-table tr:hover {
+    background-color: #f9f9f9;
+  }
+  .status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: bold;
+  }
+  .status-review-pending {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+  .status-approved {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  .status-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  .status-select {
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-right: 5px;
+  }
+  .btn-update {
+    padding: 6px 12px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .btn-update:hover {
+    background-color: #0b7dda;
+  }
+</style>
+{% endblock %}
